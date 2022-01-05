@@ -35,4 +35,15 @@ with open("description.txt", "w") as f:
 
 for file, com in zip(files, communities):
     df = pd.DataFrame(com+1)
+    df.index += 1
     df.to_csv(f"results/{file}", header=False)
+
+
+# tests
+my_com = my_community_detection(networks[0], seed=124, resolution=0.85, resolution2=0.7)
+nx.draw(networks[0], node_color=my_com, cmap=plt.get_cmap("Set1"))
+plt.show()
+
+my_com = my_community_detection(networks[2], seed=124, resolution=1.2, resolution2=1.25)
+nx.draw(networks[2], node_color=my_com, cmap=plt.get_cmap("Set1"))
+plt.show()
