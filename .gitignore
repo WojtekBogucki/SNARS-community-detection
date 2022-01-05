@@ -1,5 +1,5 @@
-data/
-!data/competition
+data/*
+!data/competition/
 *.ipynb
 venv/
 __pycache__/
