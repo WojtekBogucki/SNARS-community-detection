@@ -67,9 +67,10 @@ def translate_comm(old_communities, new_communities):
     return comm
 
 
-def modularity_gain(G, communities, i, new_com, weight=None):
+def modularity_gain(G, communities, i, new_com, weight=None, resolution=1):
     """
     Modularity gain from moving node i to community new_comm
+    :param resolution: Resolution parameter in modularity
     :param G: Graph
     :param communities: list of communities
     :param i: Node number
@@ -79,16 +80,17 @@ def modularity_gain(G, communities, i, new_com, weight=None):
     """
     communities = copy.deepcopy(communities)
     comm = transform_comm(communities)
-    old_mod = nx.community.modularity(G, comm, weight=weight)
+    old_mod = nx.community.modularity(G, comm, weight=weight, resolution=resolution)
     communities[i] = new_com
     comm2 = transform_comm(communities)
-    new_mod = nx.community.modularity(G, comm2, weight=weight)
+    new_mod = nx.community.modularity(G, comm2, weight=weight, resolution=resolution)
     return new_mod - old_mod
 
 
-def my_community_detection_pass(G, communities, weight=None, seed=None):
+def my_community_detection_pass(G, communities, weight=None, seed=None, resolution=1):
     """
     Pass step of Louvain method
+    :param resolution: Resolution parameter in modularity
     :param seed:
     :param G:
     :param communities:
@@ -106,7 +108,7 @@ def my_community_detection_pass(G, communities, weight=None, seed=None):
             i_neighbors = [neigh for neigh in list(G.neighbors(i)) if communities[neigh] != communities[i] and neigh != i]
             mod_gains = []
             for neigh in i_neighbors:
-                mod_gains.append(modularity_gain(G, communities, i, communities[neigh], weight=weight))
+                mod_gains.append(modularity_gain(G, communities, i, communities[neigh], weight=weight, resolution=resolution))
             if not len(mod_gains): continue
             mod_gains = np.array(mod_gains)
             max_mod_gain = mod_gains.max()
@@ -134,9 +136,12 @@ def my_community_detection_pass(G, communities, weight=None, seed=None):
     return new_g, communities
 
 
-def my_community_detection(G, weight=None, seed=None):
+def my_community_detection(G, weight=None, seed=None, resolution=1, resolution2=1):
     """
     Louvain community detection method
+    :param resolution2: Resolution parameter in modularity after pass
+    :param seed:
+    :param resolution: Resolution parameter in modularity during pass
     :param G:
     :param weight:
     :return: List of community belonging for all nodes
@@ -148,9 +153,9 @@ def my_community_detection(G, weight=None, seed=None):
     new_g = G.copy()
     initial_com = copy.deepcopy(communities)
     while True:
-        new_g, communities_t = my_community_detection_pass(new_g, communities, weight=weight, seed=seed)
+        new_g, communities_t = my_community_detection_pass(new_g, communities, weight=weight, seed=seed, resolution=resolution)
         initial_com_new = translate_comm(initial_com, communities_t)
-        new_mod = nx.community.modularity(G, transform_comm(initial_com_new))
+        new_mod = nx.community.modularity(G, transform_comm(initial_com_new), resolution=resolution2)
         if new_mod > mod:
             print("Modularity gain: {:.2f}".format(new_mod - mod))
             mod = new_mod
